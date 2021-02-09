@@ -21,7 +21,7 @@ app.listen(PORT, () => {
 	console.log("servidor arrancado en el host " + PORT);
 
 	sequelize
-		.sync({ force: false })
+		.authenticate()
 		.then(() => {
 			console.log("conectado a la db");
 		})
