@@ -12,6 +12,9 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
 
+app.get("/", (req, res) => {
+	res.json({ welcome: "a la api" });
+});
 app.use("/api", apiRouter);
 
 app.listen(PORT, () => {
