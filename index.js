@@ -4,7 +4,7 @@ const { sequelize } = require("./database/db");
 const cors = require("cors");
 const apiRouter = require("./routes/api");
 require("./database/associations");
-const PORT = process.env.PORT | 3000;
+const PORT = process.env.PORT || 3000;
 
 const app = express();
 
