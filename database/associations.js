@@ -1,6 +1,7 @@
 const AccountState = require("./models/estadoCuenta");
 const Banks = require("./models/banks");
 const DetailsReferences = require("./models/details-reference");
+const Usuario = require("./models/usuarios");
 
 //un estado de cuenta con el detalle de la transferencia
 // añade una clave foranea a la tabla detailsreference

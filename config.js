@@ -1,12 +1,12 @@
 module.exports = {
 	database: {
-		username: "khlo8dnQJq",
-		password: "Ru0NmQmSoI",
+		// username: "khlo8dnQJq",
+		// password: "Ru0NmQmSoI",
 		database: "khlo8dnQJq",
-		host: "remotemysql.com",
-		// username: "root",
-		// password: "",
+		// host: "remotemysql.com",
+		username: "root",
+		password: "",
 		// database: "db_administrativo",
-		// host: "localhost",
+		host: "localhost",
 	},
 };
