@@ -3,20 +3,37 @@ const bcryp = require("bcryptjs");
 const jwt = require("jwt-simple");
 const Usuario = require("../database/models/usuarios");
 const dtoUsuario = require("../dto/usuario");
+const { errores, success } = require("../dto/outputData");
+const path = require("path");
 
 const crearUsuario = async (req, res) => {
 	req.body.password = bcryp.hashSync(req.body.password, 10);
 
+	const image = req.files?.image;
 	const user = dtoUsuario.todosLosDatosUsuario(req.body);
 
 	try {
-		const usu = await Usuario.create(user, {
-			fields: ["password", "nombre", "apellido", "username", "email"],
-		});
+		const nameImage = image ? moment().unix() + image.name : null;
+		if (image) {
+			image.mv(`./images/${nameImage}`);
+		}
+		const usu = await Usuario.create(
+			Object.assign({}, user, { image: nameImage }),
+			{
+				fields: [
+					"password",
+					"nombre",
+					"apellido",
+					"username",
+					"email",
+					"image",
+				],
+			},
+		);
 
-		return res.json({ success: "Se ha creado el usuario" });
+		return success(res, 200, "Se ha creado el usuario");
 	} catch (error) {
-		return res.json({ errores: error });
+		return errores(res, 400, "Ha ocurrido un error al crear el usuario");
 	}
 };
 
@@ -32,20 +49,30 @@ const loginUsuario = async (req, res) => {
 	if (usuario) {
 		const iguales = bcryp.compareSync(req.body.password, usuario.password);
 		if (iguales) {
-			return res.json({ success: crearToken(usuario) });
+			return success(res, 200, {
+				token: crearToken(usuario),
+				usuario: dtoUsuario.usuario(usuario, true),
+			});
 		} else {
-			return res.json({ errores: "Error en usuario y/o contraseña" });
+			return errores(res, 400, "Error en usuario y/o contraseña");
 		}
 	} else {
-		return res.json({ errores: "Error en usuario y/o contraseña" });
+		return errores(res, 400, "Error en usuario y/o contraseña");
 	}
+};
+
+const imageUsuario = (req, res) => {
+	const param = req.params.image;
+	const pathImage = path.resolve(__dirname, `../images/${param}`);
+
+	return res.sendFile(pathImage);
 };
 
 const crearToken = (usuario) => {
 	const payload = {
 		usuarioId: usuario.id,
 		createdAt: moment().unix(),
-		expiredAt: moment().add(5, "minutes").unix(),
+		expiredAt: moment().add(360, "minutes").unix(),
 	};
 
 	return jwt.encode(payload, "sistema administrativo");
@@ -55,4 +82,5 @@ module.exports = {
 	crearUsuario,
 	loginUsuario,
 	comprobarUsernamequeexiste,
+	imageUsuario,
 };
