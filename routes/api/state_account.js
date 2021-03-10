@@ -3,40 +3,51 @@ const controllersState = require("../../controllers/state_account_controllers");
 const middlewares = require("../middlewares");
 const path = require("path");
 const { check, param } = require("express-validator");
+const moment = require("moment");
+
+router.get("/paginacion/:ano/:mes", controllersState.paginacion);
 
 router.get("/", controllersState.conseguirTodos);
 router.get("/reference/all", controllersState.getReferenciasAll);
-router.get("/excel/:fecha1/:fecha2", async (req, res) => {
-	const datas = await controllersState.getAll(
-		req.params.fecha1,
-		req.params.fecha2,
-	);
+router.get("/excel/:ano/:mes", async (req, res) => {
+	const momento = moment([parseInt(req.params.ano), parseInt(req.params.mes)]);
+	const desde = momento.startOf("month").format("YYYY-MM-DD");
+	const hasta = momento.endOf("month").format("YYYY-MM-DD");
 
-	const workSheetColumnNames = [
-		"id",
-		"Fecha",
-		"Referencia",
-		"Concepto",
-		"DEBE",
-		"HABER",
-		"SALDO",
-		"Verificado",
-	];
-	const workSheetName = "Libro Mayor";
+	const datas = await controllersState.getAll(desde, hasta);
+
+	// return res.json(datas);
+
+	// const workSheetColumnNames = [
+	// 	"Fecha",
+	// 	"Referencia",
+	// 	"Concepto",
+	// 	"DEBE",
+	// 	"HABER",
+	// 	"SALDO",
+	// ];
+	// const workSheetName = "Libro Mayor";
 	const filePath = "./output/excel.xlsx";
-	const excelExport = controllersState.exportUserToExcel(
-		datas,
-		workSheetColumnNames,
-		workSheetName,
-		filePath,
-	);
+	// const excelExport = controllersState.exportUserToExcel(
+	// 	datas,
+	// 	workSheetColumnNames,
+	// 	workSheetName,
+	// 	filePath,
+	// );
 
-	return res.download(path.resolve(filePath), "excel.xlsx", (error) => {
-		if (error) {
-			console.log(error);
-		} else {
-		}
+	const exportExcel = controllersState.exportExcel4node({
+		fecha: desde,
+		datos: datas,
 	});
+
+	return setTimeout(() => {
+		return res.download(path.resolve(filePath), "excel.xlsx", (error) => {
+			if (error) {
+				console.log(error);
+			} else {
+			}
+		});
+	}, 1000);
 });
 
 router.post(

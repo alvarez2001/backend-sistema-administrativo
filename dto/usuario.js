@@ -4,6 +4,7 @@ const usuario = (data, mostrarId = false) => {
 		apellido: data.apellido,
 		email: data.email,
 		username: data.username,
+		image: data?.image,
 	};
 
 	if (mostrarId) {

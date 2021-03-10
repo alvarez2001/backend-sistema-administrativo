@@ -31,5 +31,6 @@ router.post(
 	middlewares.checkErrors,
 	constroller.loginUsuario,
 );
+router.get("/imagen/:image", constroller.imageUsuario);
 
 module.exports = router;

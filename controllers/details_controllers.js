@@ -4,11 +4,12 @@ const AccountState = require("../database/models/estadoCuenta");
 const { verifiedState } = require("./state_account_controllers");
 const { getOneExist } = require("./banks_controllers");
 const { get } = require("../routes/api/details");
+const { errores, success } = require("../dto/outputData");
 
 const getAll = async (req, res) => {
 	try {
 		const detailsReference = await DetailsReferences.findAll({
-			attributes: ["concept", "accountOrigin", "id"],
+			attributes: ["concept", "accountOrigin", "id", "destinatario"],
 			include: {
 				model: AccountState,
 				as: "reference",
@@ -23,8 +24,9 @@ const getAll = async (req, res) => {
 
 const getOne = async (req, res) => {
 	try {
+		console.log(req.params.reference);
 		const detailsReference = await DetailsReferences.findOne({
-			attributes: ["concept", "accountOrigin", "id"],
+			attributes: ["concept", "accountOrigin", "id", "destinatario"],
 			where: {
 				reference_id: req.params.reference,
 			},
@@ -44,11 +46,13 @@ const getOne = async (req, res) => {
 		});
 
 		if (detailsReference) {
-			return res.json(detailsReference);
+			return success(res, 200, detailsReference);
 		}
-		return res.status(404).json({
-			errores: { msg: "No se ha podido encontrar la referencia solicitada" },
-		});
+		return errores(
+			res,
+			404,
+			"No se ha podido encontrar la referencia solicitada",
+		);
 	} catch (error) {
 		return res.status(400).json({ errores: error });
 	}
@@ -61,6 +65,7 @@ const createOne = async (req, res) => {
 		concept: req.body.concept,
 		accountOrigin: req.body.accountOrigin,
 		reference_id: req.body.reference_id,
+		destinatario: req.body?.destinatario,
 	};
 
 	if (!isNaN(bankid)) {
@@ -68,9 +73,7 @@ const createOne = async (req, res) => {
 		datos["bank_id"] = bankid;
 
 		if (!one) {
-			return res.status(400).json({
-				errores: { msg: "No existe el identificador del banco" },
-			});
+			return errores(res, 404, "No existe el identificador del banco");
 		}
 	}
 	try {
@@ -78,13 +81,27 @@ const createOne = async (req, res) => {
 			verifiedState(req.body.reference_id, t);
 
 			const details = await DetailsReferences.create(Object.assign({}, datos), {
-				fields: ["concept", "accountOrigin", "bank_id", "reference_id"],
+				fields: [
+					"concept",
+					"accountOrigin",
+					"bank_id",
+					"reference_id",
+					"destinatario",
+				],
 				transaction: t,
 			});
-			return res.json(details);
+			return success(
+				res,
+				200,
+				"Se ha verificado correctamente la transferencia",
+			);
 		});
 	} catch (error) {
-		return res.status(400).json({ errores: error });
+		return errores(
+			res,
+			400,
+			"Ha ocurrido un error al verificar la transferencia",
+		);
 	}
 };
 
@@ -125,8 +142,57 @@ const deleteOne = async (req, res) => {
 	}
 };
 
+const actualizarDetalle = async (req, res) => {
+	const actualizar = await DetailsReferences.findOne({
+		where: { id: req.params.id },
+	});
+
+	if (actualizar) {
+		try {
+			const result = await sequelize.transaction(async (t) => {
+				if (req.body.concept && req.body.concept !== actualizar.concept) {
+					await actualizar.update(
+						{ concept: req.body.concept },
+						{ transaction: t },
+					);
+				}
+				if (
+					req.body.destinatario &&
+					req.body.destinatario !== actualizar.destinatario
+				) {
+					await actualizar.update(
+						{ destinatario: req.body.destinatario },
+						{ transaction: t },
+					);
+				}
+				if (
+					req.body.accountOrigin &&
+					req.body.accountOrigin !== actualizar.accountOrigin
+				) {
+					await actualizar.update(
+						{ accountOrigin: req.body.accountOrigin },
+						{ transaction: t },
+					);
+				}
+
+				return res.json({
+					success: "Se ha actualizado correctamente",
+					data: actualizar,
+				});
+			});
+		} catch (error) {
+			return res.json({ errores: error });
+		}
+	} else {
+		return res.status(400).json({
+			errores: "No se ha encontrado el id del detalle de la referencia",
+		});
+	}
+};
+
 module.exports = {
 	getAll,
+	actualizarDetalle,
 	comprobarexistencia,
 	createOne,
 	getOne,

@@ -1,12 +1,11 @@
+const config = require("./config-orm");
+
 module.exports = {
 	database: {
-		// username: "khlo8dnQJq",
-		// password: "Ru0NmQmSoI",
-		database: "khlo8dnQJq",
-		// host: "remotemysql.com",
-		username: "root",
-		password: "",
-		// database: "db_administrativo",
-		host: "localhost",
+		database: config.database,
+		username: config.username,
+		password: config.password,
+		host: config.host,
+		dialect: config.dialect,
 	},
 };

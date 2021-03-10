@@ -19,6 +19,7 @@ router.get(
 	middlewares.checkErrors,
 	controllersState.getOne,
 );
+router.put("/:id", middlewares.checkErrors, controllersState.actualizarDetalle);
 router.post(
 	"/",
 	[
@@ -41,6 +42,10 @@ router.post(
 			.custom((value) => {
 				return comprobarNoexistePk(value);
 			}),
+		check("destinatario", "El destinatario es obligatorio")
+			.notEmpty()
+			.trim()
+			.escape(),
 	],
 	middlewares.checkErrors,
 	controllersState.createOne,

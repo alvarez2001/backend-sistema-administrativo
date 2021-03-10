@@ -11,14 +11,15 @@ const checkErrors = (req, res, next) => {
 };
 
 const checkToken = (req, res, next) => {
-	if (!req.headers["user-token"]) {
+	if (!req.headers["user-token"] && !req.query["user-token"]) {
 		return res.json({ errores: "es necesaria la cabecera del token" });
 	}
-	const userToken = req.headers["user-token"];
+	const userToken = req.headers["user-token"] || req.query["user-token"];
 	let payload = {};
 	try {
 		payload = jwt.decode(userToken, "sistema administrativo");
-		if (payload.expiredAt < moment().unix) {
+
+		if (payload.expiredAt < moment().unix()) {
 			return res.json({ errores: "El token ha expirado" });
 		}
 	} catch (error) {

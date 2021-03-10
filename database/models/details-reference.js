@@ -13,6 +13,10 @@ DetailsReferences.init(
 			type: DataTypes.STRING,
 			allowNull: false,
 		},
+		destinatario: {
+			type: DataTypes.STRING,
+			allowNull: true,
+		},
 	},
 	{
 		sequelize,
